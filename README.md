@@ -3,9 +3,7 @@
 A live, theme-aware status line for [Pi](https://pi.dev), inspired by
 [Claude Status](https://github.com/claude-contrib/claude-status).
 
-[![Pi Status footer showing context usage, estimated cost, model, directory, and Git branch](docs/status-line.png)](https://raw.githubusercontent.com/pi-contrib/pi-status/main/docs/status-line.png)
-
-[View the full-resolution screenshot](https://raw.githubusercontent.com/pi-contrib/pi-status/main/docs/status-line.png).
+![Pi Status demo showing the prompt and footer](docs/status-line.png)
 
 ## How it works
 
