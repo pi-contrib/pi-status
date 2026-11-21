@@ -1,6 +1,6 @@
 {
   "name": "@pi-contrib/pi-status",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Claude Status-inspired footer for Pi",
   "license": "MIT",
   "type": "module",

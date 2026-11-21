@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/pi-contrib/pi-status/compare/v0.1.0...v0.1.1) (2026-11-21)
+
+
+### Bug Fixes
+
+* follow the active Pi theme in the footer ([89cda8c](https://github.com/pi-contrib/pi-status/commit/89cda8ceb0b3de8ed61dcc194c8383ecea0b4613))
+
 ## 0.1.0 (2026-11-21)
 
 
