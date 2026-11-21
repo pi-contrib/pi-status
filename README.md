@@ -3,9 +3,7 @@
 A live, theme-aware status line for [Pi](https://pi.dev), inspired by
 [Claude Status](https://github.com/claude-contrib/claude-status).
 
-```text
-⣿⣿⣀⣀⣀⣀⣀⣀⣀⣀ 20%  ~$0.02  gpt-6-sol    my-project    main
-```
+![Pi Status footer showing context usage, estimated cost, model, directory, and Git branch](docs/status-line.png)
 
 ## How it works
 
