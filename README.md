@@ -1,6 +1,6 @@
 # Pi Status
 
-A live Catppuccin Mocha status line for [Pi](https://pi.dev), inspired by
+A live, theme-aware status line for [Pi](https://pi.dev), inspired by
 [Claude Status](https://github.com/claude-contrib/claude-status).
 
 ```text
@@ -9,7 +9,7 @@ A live Catppuccin Mocha status line for [Pi](https://pi.dev), inspired by
 
 ## How it works
 
-Pi Status replaces the interactive footer with context usage, estimated model usage cost,
+Pi Status follows your active Pi theme and replaces the interactive footer with context usage, estimated model usage cost,
 model, directory, and Git branch. Cost is calculated from the active conversation branch,
 not a billing record. The layout adapts to narrow terminals and preserves other extensions’
 status messages on a second line.

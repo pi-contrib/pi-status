@@ -2,17 +2,9 @@ import { basename } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
-const mocha = {
-  surface: "69;71;90",
-  muted: "108;112;134",
-  maroon: "235;160;172",
-  teal: "148;226;213",
-  blue: "137;180;250",
-  pink: "245;194;231",
-  green: "166;227;161",
-  yellow: "249;226;175",
-  red: "243;139;168",
-} as const;
+type FooterColor = "borderMuted" | "muted" | "accent" | "border" | "borderAccent"
+  | "success" | "warning" | "error";
+type Paint = (color: FooterColor, text: string) => string;
 
 type FooterState = {
   percent: number | null | undefined;
@@ -22,28 +14,26 @@ type FooterState = {
   branch: string | null | undefined;
 };
 
-const paint = (color: keyof typeof mocha, text: string) =>
-  `\x1b[38;2;${mocha[color]}m${text}\x1b[39m`;
-const separator = paint("surface", "  ");
 const sanitize = (label: string) => label.replace(/[\p{Cc}\p{Zl}\p{Zp}]/gu, "");
 
-export function formatFooter(state: FooterState, width: number): string {
+export function formatFooter(state: FooterState, width: number, paint: Paint): string {
+  const separator = paint("borderMuted", "  ");
   const { percent, estimatedCost, model, directory, branch } = state;
   const used = percent != null && Number.isFinite(percent)
     ? Math.max(0, Math.floor(percent))
     : undefined;
-  const color = (used ?? 0) >= 90 ? "red" : (used ?? 0) >= 70 ? "yellow" : "green";
+  const color = (used ?? 0) >= 90 ? "error" : (used ?? 0) >= 70 ? "warning" : "success";
   const context = (cells: number) => {
     const filled = Math.min(cells, Math.floor(((used ?? 0) * cells) / 100));
-    const bar = paint(color, "⣿".repeat(filled)) + paint("surface", "⣿".repeat(cells - filled));
+    const bar = paint(color, "⣿".repeat(filled)) + paint("borderMuted", "⣿".repeat(cells - filled));
     const label = paint("muted", used === undefined ? "—" : `${used}%`);
     return cells > 0 ? `${bar} ${label}` : label;
   };
   // Pi reports a usage estimate for the active conversation branch, not a billed amount.
-  const cost = paint("maroon", `~$${estimatedCost.toFixed(2)}`);
-  const modelLabel = paint("teal", sanitize(model));
-  const directoryLabel = paint("blue", `  ${sanitize(directory)}`);
-  const branchLabel = branch ? paint("pink", `  ${sanitize(branch)}`) : undefined;
+  const cost = paint("muted", `~$${estimatedCost.toFixed(2)}`);
+  const modelLabel = paint("accent", sanitize(model));
+  const directoryLabel = paint("border", `  ${sanitize(directory)}`);
+  const branchLabel = branch ? paint("borderAccent", `  ${sanitize(branch)}`) : undefined;
   const core = [context(10), cost, modelLabel];
   const location = [...core, directoryLabel];
   const layouts = [
@@ -82,7 +72,7 @@ export default function (pi: ExtensionAPI) {
           model: ctx.model?.id ?? "no model",
           directory: basename(ctx.cwd),
           branch: data.getGitBranch(),
-        }, width);
+        }, width, (color, text) => ctx.ui.theme.fg(color, text));
         const status = [...data.getExtensionStatuses().values()].filter(Boolean).join("  ");
         return status ? [line, truncateToWidth(status, width)] : [line];
       },
