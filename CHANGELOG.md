@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/pi-contrib/pi-status/compare/v0.1.1...v0.1.2) (2026-11-22)
+
+
+### Performance Improvements
+
+* cache footer cost and organize extension sources ([0fbafe0](https://github.com/pi-contrib/pi-status/commit/0fbafe0d13a70f9f75bf1c4bbbd3242e0783bb22))
+
 ## [0.1.1](https://github.com/pi-contrib/pi-status/compare/v0.1.0...v0.1.1) (2026-11-21)
 
 
