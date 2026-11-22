@@ -19,19 +19,20 @@ status messages on a second line.
 
 ## Installation
 
-After the first release, install from GitHub without a registry login:
+Install the latest code from GitHub without a registry login:
 
 ```sh
-pi install git:github.com/pi-contrib/pi-status@v0.1.0
+pi install git:github.com/pi-contrib/pi-status
 ```
 
 Or, after configuring npm authentication for `npm.pkg.github.com` and the `@pi-contrib`
-scope, install from GitHub Packages:
+scope, install the latest release from GitHub Packages:
 
 ```sh
-pi install npm:@pi-contrib/pi-status@0.1.0
+pi install npm:@pi-contrib/pi-status
 ```
 
+For a reproducible install, append a release tag (for GitHub) or a version (for npm).
 Restart Pi or run `/reload`. No extra configuration is required.
 
 ## Development
@@ -41,8 +42,9 @@ Use Node.js 22 locally or enter the Nix dev shell with `nix develop`:
 ```sh
 npm ci --ignore-scripts
 npm run check
+npm test
 npm pack --dry-run
-pi -e ./index.ts
+pi -e ./src/index.ts
 ```
 
 Release Please creates release PRs. Merging one tags the release and publishes the npm

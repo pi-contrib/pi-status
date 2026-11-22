@@ -2,10 +2,11 @@
   "compilerOptions": {
     "module": "NodeNext",
     "strict": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "noEmit": true
   },
   "include": [
-    "index.ts"
+    "src/**/*.ts"
   ]
 }

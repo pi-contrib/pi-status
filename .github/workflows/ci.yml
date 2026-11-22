@@ -18,7 +18,7 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run check
-      - run: node --experimental-strip-types --test footer.test.mjs
+      - run: npm test
       - run: npm pack --dry-run
 
   release:
