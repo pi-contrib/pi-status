@@ -42,10 +42,13 @@ Use Node.js 22 locally or enter the Nix dev shell with `nix develop`:
 ```sh
 npm ci --ignore-scripts
 npm run check
+npm run lint
 npm test
 npm pack --dry-run
 pi -e ./src/index.ts
 ```
+
+Run `npm run format` to apply Biome formatting, import sorting, and safe lint fixes.
 
 Release Please creates release PRs. Merging one tags the release and publishes the npm
 package to GitHub Packages. The repository must allow Actions to create pull requests,

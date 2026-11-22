@@ -43,7 +43,10 @@ export function format(state: State, width: number, paint: Paint): string {
     const bar =
       paint(usageColor, "⣿".repeat(filled)) +
       paint("borderMuted", "⣿".repeat(cells - filled));
-    const label = paint("muted", usagePercent === undefined ? "—" : `${usagePercent}%`);
+    const label = paint(
+      "muted",
+      usagePercent === undefined ? "—" : `${usagePercent}%`,
+    );
     return cells > 0 ? `${bar} ${label}` : label;
   };
 
@@ -93,7 +96,10 @@ export default function (pi: ExtensionAPI) {
         if (cachedLeafId !== leafId) {
           cachedCost = 0;
           for (const entry of ctx.sessionManager.getBranch()) {
-            if (entry.type === "message" && entry.message.role === "assistant") {
+            if (
+              entry.type === "message" &&
+              entry.message.role === "assistant"
+            ) {
               cachedCost += entry.message.usage.cost.total;
             }
           }
