@@ -18,7 +18,7 @@ import register, {
   type Paint,
   type State,
   type Thinking,
-} from "./footer.ts";
+} from "../src/footer.ts";
 
 const plain: Paint = (_color, text) => text;
 const styled: Paint = (color, text) => `${color}:${text}`;
