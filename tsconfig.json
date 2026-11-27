@@ -2,6 +2,9 @@
   "compilerOptions": {
     "module": "NodeNext",
     "strict": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "noUncheckedIndexedAccess": true,
     "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "noEmit": true

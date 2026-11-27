@@ -1,6 +1,6 @@
 # Pi Status
 
-> A live, theme-aware status line for [Pi](https://pi.dev) — context usage, estimated cost, model, directory, and Git branch at a glance.
+> A live, theme-aware status line for [Pi](https://pi.dev) — context usage, estimated cost, model & thinking level, directory, and Git branch at a glance.
 
 [![CI](https://github.com/pi-contrib/pi-status/actions/workflows/ci.yml/badge.svg)](https://github.com/pi-contrib/pi-status/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/pi-contrib/pi-status)](https://github.com/pi-contrib/pi-status/releases/latest)
@@ -10,10 +10,7 @@
 
 ## How it works
 
-Pi Status follows your active Pi theme and replaces the interactive footer with context usage, estimated model usage cost,
-model, directory, and Git branch. Cost is calculated from the active conversation branch,
-not a billing record. The layout adapts to narrow terminals and preserves other extensions’
-status messages on a second line.
+Pi Status follows your active Pi theme and replaces the interactive footer with context usage, estimated branch cost (marking OAuth subscriptions with `(sub)`), active model and thinking level (plus provider when multiple are configured), directory, and Git branch. Cost is calculated from the active conversation branch, not a billing record. Variable-length segments truncate gracefully before collapsing in narrow terminals, and other extensions’ status messages are preserved cleanly on a second line.
 
 ## Requirements
 
