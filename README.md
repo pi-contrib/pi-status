@@ -1,7 +1,10 @@
 # Pi Status
 
-A live, theme-aware status line for [Pi](https://pi.dev), inspired by
-[Claude Status](https://github.com/claude-contrib/claude-status).
+> A live, theme-aware status line for [Pi](https://pi.dev) — context usage, estimated cost, model, directory, and Git branch at a glance.
+
+[![CI](https://github.com/pi-contrib/pi-status/actions/workflows/ci.yml/badge.svg)](https://github.com/pi-contrib/pi-status/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/pi-contrib/pi-status)](https://github.com/pi-contrib/pi-status/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ![Pi Status footer showing context usage, estimated cost, model, directory, and Git branch](docs/status-line.png)
 
