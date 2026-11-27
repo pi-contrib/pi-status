@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/pi-contrib/pi-status/compare/v0.1.2...v0.2.0) (2026-11-27)
+
+
+### Features
+
+* improve footer UX, session resilience, and TypeScript strictness ([33f4fed](https://github.com/pi-contrib/pi-status/commit/33f4fed6511d9d77be973fdbaffbb5991e1ead56))
+
 ## [0.1.2](https://github.com/pi-contrib/pi-status/compare/v0.1.1...v0.1.2) (2026-11-22)
 
 
