@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/pi-contrib/pi-status/compare/v0.2.0...v0.3.0) (2026-11-28)
+
+
+### Features
+
+* **footer:** show token scale, humanized model names, and compact layouts ([1c038ed](https://github.com/pi-contrib/pi-status/commit/1c038ed6ee2b493ecc42bc125f17d1c9bf197fb3))
+
 ## [0.2.0](https://github.com/pi-contrib/pi-status/compare/v0.1.2...v0.2.0) (2026-11-27)
 
 
