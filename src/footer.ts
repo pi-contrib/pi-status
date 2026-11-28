@@ -278,7 +278,10 @@ export function format(state: State, width: number, paint: Paint): string {
             : estimatedCost.toFixed(2)
         }`
       : "~$—";
-  const costCompact = paint("muted", costAmount);
+  const costCompact = paint(
+    costAmount === "~$—" ? "muted" : "borderAccent",
+    costAmount,
+  );
   const costFull =
     usingSubscription && costAmount !== "~$—"
       ? `${costCompact}${dot}${paint("muted", "subscription")}`

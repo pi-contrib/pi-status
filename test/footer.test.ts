@@ -119,7 +119,7 @@ test("formats token counts, model names, provider names, and thinking levels cle
 test("formats sub-cent, standard, subscription, and invalid costs", () => {
   assert.match(
     format({ ...baseState, estimatedCost: 0 }, 300, styled),
-    /muted:~\$0\.00/,
+    /borderAccent:~\$0\.00/,
   );
   assert.match(
     format({ ...baseState, estimatedCost: 0.004 }, 120, plain),
@@ -135,7 +135,7 @@ test("formats sub-cent, standard, subscription, and invalid costs", () => {
       300,
       styled,
     ),
-    /muted:~\$1\.33borderMuted: · muted:subscription/,
+    /borderAccent:~\$1\.33borderMuted: · muted:subscription/,
   );
   for (const cost of [Number.NaN, Number.POSITIVE_INFINITY, -1]) {
     assert.match(
