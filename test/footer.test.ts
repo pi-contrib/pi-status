@@ -179,6 +179,14 @@ test("renders model before humanized provider and thinking level", () => {
   assert.doesNotMatch(offThinking, /GPT-6 Sol ·/);
 });
 
+test("colors cwd and branch independently from effort and cost", () => {
+  const line = format({ ...baseState, thinking: "medium" }, 300, styled);
+  assert.match(line, /thinkingMedium:medium/);
+  assert.match(line, /syntaxOperator: myproject/);
+  assert.match(line, /syntaxNumber: main/);
+  assert.match(line, /borderAccent:~\$0\.02/);
+});
+
 test("compacts secondary details before dropping branch or directory in an 80-col split pane", () => {
   const rich: State = {
     percent: 13,

@@ -21,6 +21,8 @@ export type Color = Extract<
   | "accent"
   | "border"
   | "borderAccent"
+  | "syntaxNumber"
+  | "syntaxOperator"
   | "success"
   | "warning"
   | "error"
@@ -340,12 +342,12 @@ export function format(state: State, width: number, paint: Paint): string {
   ];
 
   if (cleanDirectory && cleanBranch) {
-    const dirSegment = paint("border", ` ${cleanDirectory}`);
+    const dirSegment = paint("syntaxOperator", ` ${cleanDirectory}`);
     for (const allowTruncate of [false, true]) {
       for (const tier of coreTiers) {
         const fitted = tryFitTrailing(
           [...tier, dirSegment],
-          "borderAccent",
+          "syntaxNumber",
           "",
           cleanBranch,
           allowTruncate,
@@ -360,7 +362,7 @@ export function format(state: State, width: number, paint: Paint): string {
       for (const tier of coreTiers) {
         const fitted = tryFitTrailing(
           tier,
-          "border",
+          "syntaxOperator",
           "",
           cleanDirectory,
           allowTruncate,
