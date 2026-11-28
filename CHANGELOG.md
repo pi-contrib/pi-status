@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/pi-contrib/pi-status/compare/v0.3.1...v0.3.2) (2026-11-28)
+
+
+### Bug Fixes
+
+* distinguish footer segment colors in Catppuccin ([7285a18](https://github.com/pi-contrib/pi-status/commit/7285a18cf2b978aa662bb7f085f0db663841dbe4))
+
 ## [0.3.1](https://github.com/pi-contrib/pi-status/compare/v0.3.0...v0.3.1) (2026-11-28)
 
 
