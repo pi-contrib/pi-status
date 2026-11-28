@@ -220,8 +220,6 @@ export function format(state: State, width: number, paint: Paint): string {
   const dot = paint("borderMuted", " · ");
   const {
     percent,
-    tokens,
-    contextWindow,
     estimatedCost,
     usingSubscription,
     provider,
@@ -248,37 +246,22 @@ export function format(state: State, width: number, paint: Paint): string {
         ? "error"
         : usagePercent >= 70
           ? "warning"
-          : "text";
+          : "muted";
 
-  const hasContextWindow =
-    contextWindow != null &&
-    Number.isFinite(contextWindow) &&
-    contextWindow > 0;
-  const hasTokens = tokens != null && Number.isFinite(tokens) && tokens >= 0;
-  const tokenScale = hasContextWindow
-    ? hasTokens
-      ? `${formatTokens(tokens)}/${formatTokens(contextWindow)}`
-      : formatTokens(contextWindow)
-    : undefined;
-
-  const formatContextUsage = (cells: number, includeTokens: boolean) => {
-    const percentLabel = paint(
+  const formatContextUsage = (cells: number) => {
+    const label = paint(
       percentColor,
       usagePercent === undefined ? "—" : `${usagePercent}%`,
     );
-    const label =
-      includeTokens && tokenScale
-        ? `${percentLabel}${dot}${paint("muted", tokenScale)}`
-        : percentLabel;
     if (cells <= 0) return label;
     const filled =
-      usagePercent === undefined || usagePercent <= 0
+      percent == null || !Number.isFinite(percent) || percent <= 0
         ? 0
-        : usagePercent >= 100
+        : percent >= 100
           ? cells
           : Math.min(
               cells - 1,
-              Math.max(1, Math.round((usagePercent * cells) / 100)),
+              Math.max(1, Math.round((percent * cells) / 100)),
             );
     const bar =
       paint(usageColor, "⣿".repeat(filled)) +
@@ -295,10 +278,7 @@ export function format(state: State, width: number, paint: Paint): string {
             : estimatedCost.toFixed(2)
         }`
       : "~$—";
-  const costCompact = paint(
-    costAmount === "~$—" ? "muted" : "text",
-    costAmount,
-  );
+  const costCompact = paint("muted", costAmount);
   const costFull =
     usingSubscription && costAmount !== "~$—"
       ? `${costCompact}${dot}${paint("muted", "subscription")}`
@@ -343,21 +323,17 @@ export function format(state: State, width: number, paint: Paint): string {
     return visibleWidth(candidate) <= width ? candidate : undefined;
   };
 
-  const bar10Full = formatContextUsage(10, true);
-  const bar10Compact = formatContextUsage(10, false);
-  const bar5Compact = formatContextUsage(5, false);
-  const bar0Compact = formatContextUsage(0, false);
+  const bar10 = formatContextUsage(10);
+  const bar5 = formatContextUsage(5);
+  const bar0 = formatContextUsage(0);
 
   const coreTiers: string[][] = [
-    ...(cleanProvider ? [[bar10Full, costFull, modelFull]] : []),
-    [bar10Full, costFull, modelWithThinking],
+    ...(cleanProvider ? [[bar10, costFull, modelFull]] : []),
+    [bar10, costFull, modelWithThinking],
     ...(costFull !== costCompact
-      ? [[bar10Full, costCompact, modelWithThinking]]
+      ? [[bar10, costCompact, modelWithThinking]]
       : []),
-    ...(bar10Full !== bar10Compact
-      ? [[bar10Compact, costCompact, modelWithThinking]]
-      : []),
-    [bar5Compact, costCompact, modelWithThinking],
+    [bar5, costCompact, modelWithThinking],
   ];
 
   if (cleanDirectory && cleanBranch) {
@@ -393,9 +369,9 @@ export function format(state: State, width: number, paint: Paint): string {
 
   const candidateLayouts: string[][] = [
     ...coreTiers,
-    [bar0Compact, costCompact, modelWithThinking],
-    [bar0Compact, modelWithThinking],
-    ...(modelWithThinking !== modelBare ? [[bar0Compact, modelBare]] : []),
+    [bar0, costCompact, modelWithThinking],
+    [bar0, modelWithThinking],
+    ...(modelWithThinking !== modelBare ? [[bar0, modelBare]] : []),
     [modelWithThinking],
     ...(modelWithThinking !== modelBare ? [[modelBare]] : []),
   ];

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pi Status — color preview</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #151522; color: #e1e3e8; }
+    body { max-width: 1100px; margin: 4rem auto; padding: 0 1.5rem; }
+    h1 { font-size: 1.4rem; }
+    p { color: #9198a5; }
+    section { margin: 2rem 0; }
+    h2 { font-size: 1rem; color: #b9bfca; }
+    .footer { background: #1d1d2d; padding: 1rem; border-radius: 8px; overflow-x: auto; white-space: nowrap; font: 15px/1.6 ui-monospace, 'Symbols Nerd Font', 'DejaVu Sans Mono', monospace; }
+    .fill { color: #9cdea6; } .empty, .sep { color: #55546a; }
+    .muted { color: #8989a4; } .text { color: #e1e3e8; }
+    .accent { color: #94e1d0; } .thinking { color: #c7a7ed; }
+    .dir { color: #94b8ff; } .branch { color: #e3b0d8; }
+    .warning { color: #e6bb66; } .error { color: #e77d86; }
+  </style>
+</head>
+<body>
+  <h1>Pi Status color mock</h1>
+  <p>Illustrative dark-theme colors; the extension uses your active Pi theme, so exact shades may differ.</p>
+  <section>
+    <h2>2% — normal</h2>
+    <div class="footer"><span class="fill">⣿</span><span class="empty">⣿⣿⣿⣿⣿⣿⣿⣿⣿</span> <span class="muted">2%</span><span class="sep">  </span><span class="muted">~$0.01 · subscription</span><span class="sep">  </span><span class="accent">GPT-6 Sol</span> <span class="muted">(OpenAI Codex)</span><span class="sep"> · </span><span class="thinking">medium</span><span class="sep">  </span><span class="dir"> nix-config</span><span class="sep">  </span><span class="branch"> main</span></div>
+  </section>
+  <section>
+    <h2>75% — warning</h2>
+    <div class="footer"><span class="warning">⣿⣿⣿⣿⣿⣿⣿⣿</span><span class="empty">⣿⣿</span> <span class="warning">75%</span><span class="sep">  </span><span class="muted">~$0.01 · subscription</span><span class="sep">  </span><span class="accent">GPT-6 Sol</span> <span class="muted">(OpenAI Codex)</span><span class="sep"> · </span><span class="thinking">medium</span><span class="sep">  </span><span class="dir"> nix-config</span><span class="sep">  </span><span class="branch"> main</span></div>
+  </section>
+  <section>
+    <h2>95% — critical</h2>
+    <div class="footer"><span class="error">⣿⣿⣿⣿⣿⣿⣿⣿⣿</span><span class="empty">⣿</span> <span class="error">95%</span><span class="sep">  </span><span class="muted">~$0.01 · subscription</span><span class="sep">  </span><span class="accent">GPT-6 Sol</span> <span class="muted">(OpenAI Codex)</span><span class="sep"> · </span><span class="thinking">medium</span><span class="sep">  </span><span class="dir"> nix-config</span><span class="sep">  </span><span class="branch"> main</span></div>
+  </section>
+</body>
+</html>

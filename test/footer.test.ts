@@ -42,7 +42,7 @@ test("uses warning and error colors on both gauge and percentage at context thre
   const warn = format(baseState, 300, styled);
   assert.match(warn, /warning:⣿/);
   assert.match(warn, /warning:70%/);
-  assert.match(warn, /borderMuted: · muted:140k\/200k/);
+  assert.doesNotMatch(warn, /140k\/200k/);
 
   assert.match(
     format({ ...baseState, percent: 69.6 }, 300, styled),
@@ -54,17 +54,20 @@ test("uses warning and error colors on both gauge and percentage at context thre
   );
   assert.match(
     format({ ...baseState, percent: 25 }, 300, styled),
-    /success:⣿.*text:25%/,
+    /success:⣿.*muted:25%/,
   );
 });
 
-test("lights at least one cell for low nonzero context usage and caps 10/10 until 100%", () => {
+test("lights a full cell for nonzero usage and caps at 9/10 until 100%", () => {
   const zero = format({ ...baseState, percent: 0, tokens: 0 }, 300, styled);
-  assert.doesNotMatch(zero, /success:⣿/);
+  assert.doesNotMatch(zero, /success:⣿/u);
 
-  const low = format({ ...baseState, percent: 4, tokens: 8000 }, 300, styled);
-  assert.match(low, /success:⣿borderMuted:⣿{9} /u);
-  assert.match(low, /text:4%/);
+  const tiny = format({ ...baseState, percent: 0.1 }, 300, styled);
+  assert.match(tiny, /success:⣿borderMuted:⣿{9} /u);
+
+  const low = format({ ...baseState, percent: 2, tokens: 8000 }, 300, styled);
+  assert.match(low, /success:⣿borderMuted:⣿{9} muted:2%/u);
+  assert.doesNotMatch(low, /8000|8k|200k/);
 
   const high = format({ ...baseState, percent: 98 }, 300, styled);
   assert.match(high, /error:⣿{9}borderMuted:⣿ /u);
@@ -77,7 +80,7 @@ test("sanitizes labels and keeps muted bar alignment when context usage is unkno
   const line = stripVTControlCharacters(
     format({ ...baseState, percent: null, tokens: null }, 120, plain),
   );
-  assert.match(line, /⣿{10} — · 200k.*myproject/u);
+  assert.match(line, /⣿{10} —.*myproject/u);
   assert.doesNotMatch(line, /\n/);
 });
 
@@ -116,7 +119,7 @@ test("formats token counts, model names, provider names, and thinking levels cle
 test("formats sub-cent, standard, subscription, and invalid costs", () => {
   assert.match(
     format({ ...baseState, estimatedCost: 0 }, 300, styled),
-    /text:~\$0\.00/,
+    /muted:~\$0\.00/,
   );
   assert.match(
     format({ ...baseState, estimatedCost: 0.004 }, 120, plain),
@@ -132,7 +135,7 @@ test("formats sub-cent, standard, subscription, and invalid costs", () => {
       300,
       styled,
     ),
-    /text:~\$1\.33borderMuted: · muted:subscription/,
+    /muted:~\$1\.33borderMuted: · muted:subscription/,
   );
   for (const cost of [Number.NaN, Number.POSITIVE_INFINITY, -1]) {
     assert.match(
@@ -217,7 +220,7 @@ test("drops secondary tags and truncates long branch or directory before droppin
   const at90 = format(rich, 90, plain);
   assert.ok(visibleWidth(at90) <= 90);
   assert.match(at90, / pi-status/);
-  assert.match(stripVTControlCharacters(at90), / feature.*…/);
+  assert.match(stripVTControlCharacters(at90), / featu.*…/);
 
   const longDir: State = {
     ...baseState,
@@ -414,7 +417,8 @@ test("tracks session switches, guards aborted usage, and skips non-TUI modes", (
 
   const initialLines = footer.render(160);
   assert.equal(initialLines.length, 2);
-  assert.match(initialLines[0] ?? "", /25% · 2\.5k\/10k/);
+  assert.match(initialLines[0] ?? "", /25%/);
+  assert.doesNotMatch(initialLines[0] ?? "", /2\.5k\/10k/);
   assert.match(initialLines[0] ?? "", /~\$0\.30 · subscription/);
   assert.match(initialLines[0] ?? "", /Test Model \(OpenAI Codex\) · high/);
   assert.match(initialLines[1] ?? "", /active job/);
