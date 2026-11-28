@@ -15,6 +15,7 @@ export type Thinking = ReturnType<ExtensionAPI["getThinkingLevel"]>;
 
 export type Color = Extract<
   ThemeColor,
+  | "text"
   | "borderMuted"
   | "muted"
   | "accent"
@@ -33,6 +34,8 @@ export type Color = Extract<
 
 export type State = {
   percent: number | null | undefined;
+  tokens?: number | null | undefined;
+  contextWindow?: number | null | undefined;
   estimatedCost: number;
   usingSubscription?: boolean | undefined;
   provider?: string | null | undefined;
@@ -57,7 +60,84 @@ const THINKING_COLORS: Record<Exclude<Thinking, "off">, Color> = {
   max: "thinkingMax",
 };
 
+const THINKING_LABELS: Partial<Record<Exclude<Thinking, "off">, string>> = {
+  xhigh: "x-high",
+};
+
+const PROVIDER_NAMES: Record<string, string> = {
+  "amazon-bedrock": "Bedrock",
+  bedrock: "Bedrock",
+  anthropic: "Anthropic",
+  openai: "OpenAI",
+  "openai-codex": "OpenAI Codex",
+  google: "Google",
+  "google-vertex": "Google Vertex",
+  "google-gemini-cli": "Gemini CLI",
+  "github-copilot": "GitHub Copilot",
+  openrouter: "OpenRouter",
+  "kimi-coding": "Kimi",
+  xai: "xAI",
+  groq: "Groq",
+  cerebras: "Cerebras",
+  mistral: "Mistral",
+  deepseek: "DeepSeek",
+  azure: "Azure",
+  "vercel-ai-gateway": "Vercel",
+  "cloudflare-workers-ai": "Cloudflare",
+  "cloudflare-ai-gateway": "Cloudflare",
+  huggingface: "Hugging Face",
+  fireworks: "Fireworks",
+  together: "Together",
+  baseten: "Baseten",
+  opencode: "OpenCode",
+  "opencode-go": "OpenCode Go",
+  minimax: "MiniMax",
+  "minimax-cn": "MiniMax",
+  moonshotai: "Moonshot",
+  "moonshotai-cn": "Moonshot",
+  zai: "Z.ai",
+  "zai-coding-cn": "Z.ai",
+  nvidia: "NVIDIA",
+  meta: "Meta",
+  xiaomi: "Xiaomi",
+};
+
 const sanitize = (label: string) => label.replace(/[\p{Cc}\p{Zl}\p{Zp}]/gu, "");
+
+export function formatTokens(count: number): string {
+  if (!Number.isFinite(count) || count < 0) return "0";
+  if (count < 1000) return `${Math.round(count)}`;
+  if (count < 9950) return `${(count / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  if (count < 999_500) return `${Math.round(count / 1000)}k`;
+  if (count < 9_950_000) {
+    return `${(count / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  }
+  return `${Math.round(count / 1_000_000)}M`;
+}
+
+export function formatModelName(raw: string): string {
+  const cleaned = sanitize(raw).trim();
+  if (!cleaned) return "no model";
+  const withoutVendor = cleaned.replace(/^[^:]+:\s+(?=\S)/, "");
+  const withoutLatest = withoutVendor.replace(/\s+\(latest\)$/i, "").trim();
+  return withoutLatest || cleaned;
+}
+
+export function formatProviderName(provider: string): string {
+  const cleaned = sanitize(provider).trim();
+  if (!cleaned) return "";
+  const known = PROVIDER_NAMES[cleaned.toLowerCase()];
+  if (known) return known;
+  return cleaned
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+export function formatThinkingLevel(level: Exclude<Thinking, "off">): string {
+  return THINKING_LABELS[level] ?? level;
+}
 
 export function formatDirectory(cwd: string, home: string = homedir()): string {
   if (!cwd) return "";
@@ -137,8 +217,11 @@ export function format(state: State, width: number, paint: Paint): string {
   if (width <= 0) return "";
 
   const separator = paint("borderMuted", "  ");
+  const dot = paint("borderMuted", " · ");
   const {
     percent,
+    tokens,
+    contextWindow,
     estimatedCost,
     usingSubscription,
     provider,
@@ -158,12 +241,35 @@ export function format(state: State, width: number, paint: Paint): string {
       : (usagePercent ?? 0) >= 70
         ? "warning"
         : "success";
+  const percentColor: Color =
+    usagePercent === undefined
+      ? "muted"
+      : usagePercent >= 90
+        ? "error"
+        : usagePercent >= 70
+          ? "warning"
+          : "text";
 
-  const formatContextUsage = (cells: number) => {
-    const label = paint(
-      "muted",
+  const hasContextWindow =
+    contextWindow != null &&
+    Number.isFinite(contextWindow) &&
+    contextWindow > 0;
+  const hasTokens = tokens != null && Number.isFinite(tokens) && tokens >= 0;
+  const tokenScale = hasContextWindow
+    ? hasTokens
+      ? `${formatTokens(tokens)}/${formatTokens(contextWindow)}`
+      : formatTokens(contextWindow)
+    : undefined;
+
+  const formatContextUsage = (cells: number, includeTokens: boolean) => {
+    const percentLabel = paint(
+      percentColor,
       usagePercent === undefined ? "—" : `${usagePercent}%`,
     );
+    const label =
+      includeTokens && tokenScale
+        ? `${percentLabel}${dot}${paint("muted", tokenScale)}`
+        : percentLabel;
     if (cells <= 0) return label;
     const filled =
       usagePercent === undefined || usagePercent <= 0
@@ -189,26 +295,28 @@ export function format(state: State, width: number, paint: Paint): string {
             : estimatedCost.toFixed(2)
         }`
       : "~$—";
-  const costCompact = paint("muted", costAmount);
+  const costCompact = paint(
+    costAmount === "~$—" ? "muted" : "text",
+    costAmount,
+  );
   const costFull =
     usingSubscription && costAmount !== "~$—"
-      ? paint("muted", `${costAmount} (sub)`)
+      ? `${costCompact}${dot}${paint("muted", "subscription")}`
       : costCompact;
 
-  const cleanModel = sanitize(model) || "no model";
-  const cleanProvider = provider ? sanitize(provider) : "";
+  const cleanModel = formatModelName(model);
+  const cleanProvider = provider ? formatProviderName(provider) : "";
   const activeThinking = thinking && thinking !== "off" ? thinking : undefined;
 
   const modelBare = paint("accent", cleanModel);
-  const modelWithThinking = activeThinking
-    ? `${modelBare}${paint("borderMuted", " • ")}${paint(
-        THINKING_COLORS[activeThinking],
-        activeThinking,
-      )}`
-    : modelBare;
   const modelWithProvider = cleanProvider
-    ? `${paint("muted", `(${cleanProvider}) `)}${modelWithThinking}`
-    : modelWithThinking;
+    ? `${modelBare} ${paint("muted", `(${cleanProvider})`)}`
+    : modelBare;
+  const thinkingSuffix = activeThinking
+    ? `${dot}${paint(THINKING_COLORS[activeThinking], formatThinkingLevel(activeThinking))}`
+    : "";
+  const modelWithThinking = `${modelBare}${thinkingSuffix}`;
+  const modelFull = `${modelWithProvider}${thinkingSuffix}`;
 
   const cleanDirectory = sanitize(directory);
   const cleanBranch = branch ? sanitize(branch) : "";
@@ -218,80 +326,76 @@ export function format(state: State, width: number, paint: Paint): string {
     color: Color,
     icon: string,
     label: string,
+    allowTruncate: boolean,
   ): string | undefined => {
     if (!label) return undefined;
     const prefix = `${prefixSegments.join(separator)}${separator}`;
-    const full = `${prefix}${paint(color, `${icon}  ${label}`)}`;
+    const full = `${prefix}${paint(color, `${icon} ${label}`)}`;
     if (visibleWidth(full) <= width) return full;
+    if (!allowTruncate) return undefined;
 
-    const iconOverhead = visibleWidth(paint(color, `${icon}  `));
+    const iconOverhead = visibleWidth(paint(color, `${icon} `));
     const maxLabelWidth = width - visibleWidth(prefix) - iconOverhead;
     if (maxLabelWidth < MIN_TRUNCATED_LABEL_WIDTH) return undefined;
 
     const truncated = truncateToWidth(label, maxLabelWidth, "…");
-    const candidate = `${prefix}${paint(color, `${icon}  ${truncated}`)}`;
+    const candidate = `${prefix}${paint(color, `${icon} ${truncated}`)}`;
     return visibleWidth(candidate) <= width ? candidate : undefined;
   };
 
-  const bar10 = formatContextUsage(10);
-  const bar5 = formatContextUsage(5);
-  const bar0 = formatContextUsage(0);
+  const bar10Full = formatContextUsage(10, true);
+  const bar10Compact = formatContextUsage(10, false);
+  const bar5Compact = formatContextUsage(5, false);
+  const bar0Compact = formatContextUsage(0, false);
+
+  const coreTiers: string[][] = [
+    ...(cleanProvider ? [[bar10Full, costFull, modelFull]] : []),
+    [bar10Full, costFull, modelWithThinking],
+    ...(costFull !== costCompact
+      ? [[bar10Full, costCompact, modelWithThinking]]
+      : []),
+    ...(bar10Full !== bar10Compact
+      ? [[bar10Compact, costCompact, modelWithThinking]]
+      : []),
+    [bar5Compact, costCompact, modelWithThinking],
+  ];
 
   if (cleanDirectory && cleanBranch) {
-    const dirSegment = paint("border", `  ${cleanDirectory}`);
-    if (cleanProvider) {
-      const fitWithProvider = tryFitTrailing(
-        [bar10, costFull, modelWithProvider, dirSegment],
-        "borderAccent",
-        "",
-        cleanBranch,
-      );
-      if (fitWithProvider !== undefined) return fitWithProvider;
+    const dirSegment = paint("border", ` ${cleanDirectory}`);
+    for (const allowTruncate of [false, true]) {
+      for (const tier of coreTiers) {
+        const fitted = tryFitTrailing(
+          [...tier, dirSegment],
+          "borderAccent",
+          "",
+          cleanBranch,
+          allowTruncate,
+        );
+        if (fitted !== undefined) return fitted;
+      }
     }
-    const fitWithoutProvider = tryFitTrailing(
-      [bar10, costFull, modelWithThinking, dirSegment],
-      "borderAccent",
-      "",
-      cleanBranch,
-    );
-    if (fitWithoutProvider !== undefined) return fitWithoutProvider;
   }
 
   if (cleanDirectory) {
-    if (cleanProvider && !cleanBranch) {
-      const fitDirWithProvider = tryFitTrailing(
-        [bar10, costFull, modelWithProvider],
-        "border",
-        "",
-        cleanDirectory,
-      );
-      if (fitDirWithProvider !== undefined) return fitDirWithProvider;
+    for (const allowTruncate of [false, true]) {
+      for (const tier of coreTiers) {
+        const fitted = tryFitTrailing(
+          tier,
+          "border",
+          "",
+          cleanDirectory,
+          allowTruncate,
+        );
+        if (fitted !== undefined) return fitted;
+      }
     }
-    const fitDir = tryFitTrailing(
-      [bar10, costFull, modelWithThinking],
-      "border",
-      "",
-      cleanDirectory,
-    );
-    if (fitDir !== undefined) return fitDir;
   }
 
   const candidateLayouts: string[][] = [
-    ...(cleanProvider ? [[bar10, costFull, modelWithProvider]] : []),
-    [bar10, costFull, modelWithThinking],
-    ...(costFull !== costCompact
-      ? [[bar10, costCompact, modelWithThinking]]
-      : []),
-    [bar5, costFull, modelWithThinking],
-    ...(costFull !== costCompact
-      ? [[bar5, costCompact, modelWithThinking]]
-      : []),
-    [bar0, costFull, modelWithThinking],
-    ...(costFull !== costCompact
-      ? [[bar0, costCompact, modelWithThinking]]
-      : []),
-    [bar0, modelWithThinking],
-    ...(modelWithThinking !== modelBare ? [[bar0, modelBare]] : []),
+    ...coreTiers,
+    [bar0Compact, costCompact, modelWithThinking],
+    [bar0Compact, modelWithThinking],
+    ...(modelWithThinking !== modelBare ? [[bar0Compact, modelBare]] : []),
     [modelWithThinking],
     ...(modelWithThinking !== modelBare ? [[modelBare]] : []),
   ];
@@ -387,14 +491,18 @@ export default function (pi: ExtensionAPI) {
           const thinking =
             model && rawThinking !== "off" ? rawThinking : undefined;
 
+          const contextUsage = ctx.getContextUsage();
           const footerLine = format(
             {
-              percent: ctx.getContextUsage()?.percent,
+              percent: contextUsage?.percent,
+              tokens: contextUsage?.tokens,
+              contextWindow:
+                contextUsage?.contextWindow ?? model?.contextWindow,
               estimatedCost: cachedBranchCost,
               usingSubscription,
               provider,
               thinking,
-              model: model?.id ?? "no model",
+              model: model?.name?.trim() || model?.id || "no model",
               directory: formatDirectory(
                 ctx.sessionManager.getCwd?.() ?? ctx.cwd,
               ),

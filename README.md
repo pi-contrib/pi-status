@@ -10,7 +10,7 @@
 
 ## How it works
 
-Pi Status follows your active Pi theme and replaces the interactive footer with context usage, estimated branch cost (marking OAuth subscriptions with `(sub)`), active model and thinking level (plus provider when multiple are configured), directory, and Git branch. Cost is calculated from the active conversation branch, not a billing record. Variable-length segments truncate gracefully before collapsing in narrow terminals, and other extensions’ status messages are preserved cleanly on a second line.
+Pi Status follows your active Pi theme and replaces the interactive footer with context usage (gauge, percentage, and token scale), estimated branch cost (marking OAuth subscriptions with `· subscription`), human-readable active model, provider (when multiple are configured), and thinking level, directory, and Git branch. Cost is calculated from the active conversation branch, not a billing record. Secondary qualifiers compact and trailing labels truncate gracefully before dropping segments in narrow terminals, and other extensions’ status messages are preserved cleanly on a second line.
 
 ## Requirements
 

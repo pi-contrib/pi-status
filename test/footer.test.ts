@@ -15,6 +15,10 @@ import register, {
   format,
   formatDirectory,
   formatExtensionStatuses,
+  formatModelName,
+  formatProviderName,
+  formatThinkingLevel,
+  formatTokens,
   type Paint,
   type State,
   type Thinking,
@@ -26,93 +30,139 @@ const ansi: Paint = (_color, text) => `\x1b[38;5;245m${text}\x1b[39m`;
 
 const baseState: State = {
   percent: 70,
+  tokens: 140_000,
+  contextWindow: 200_000,
   estimatedCost: 0.02,
-  model: "gpt-6-sol",
+  model: "GPT-6 Sol",
   directory: "my\nproject",
   branch: "main",
 };
 
-test("uses warning and error colors at the context thresholds", () => {
-  assert.match(format(baseState, 100, styled), /warning:⣿/);
+test("uses warning and error colors on both gauge and percentage at context thresholds", () => {
+  const warn = format(baseState, 300, styled);
+  assert.match(warn, /warning:⣿/);
+  assert.match(warn, /warning:70%/);
+  assert.match(warn, /borderMuted: · muted:140k\/200k/);
+
   assert.match(
-    format({ ...baseState, percent: 69.6 }, 100, styled),
-    /warning:⣿/,
+    format({ ...baseState, percent: 69.6 }, 300, styled),
+    /warning:⣿.*warning:70%/,
   );
-  assert.match(format({ ...baseState, percent: 90 }, 100, styled), /error:⣿/);
+  assert.match(
+    format({ ...baseState, percent: 90 }, 300, styled),
+    /error:⣿.*error:90%/,
+  );
+  assert.match(
+    format({ ...baseState, percent: 25 }, 300, styled),
+    /success:⣿.*text:25%/,
+  );
 });
 
 test("lights at least one cell for low nonzero context usage and caps 10/10 until 100%", () => {
-  const zero = format({ ...baseState, percent: 0 }, 100, styled);
+  const zero = format({ ...baseState, percent: 0, tokens: 0 }, 300, styled);
   assert.doesNotMatch(zero, /success:⣿/);
 
-  const low = format({ ...baseState, percent: 4 }, 100, styled);
+  const low = format({ ...baseState, percent: 4, tokens: 8000 }, 300, styled);
   assert.match(low, /success:⣿borderMuted:⣿{9} /u);
-  assert.match(low, /muted:4%/);
+  assert.match(low, /text:4%/);
 
-  const high = format({ ...baseState, percent: 98 }, 100, styled);
+  const high = format({ ...baseState, percent: 98 }, 300, styled);
   assert.match(high, /error:⣿{9}borderMuted:⣿ /u);
 
-  const full = format({ ...baseState, percent: 100 }, 100, styled);
+  const full = format({ ...baseState, percent: 100 }, 300, styled);
   assert.match(full, /error:⣿{10}borderMuted: /u);
 });
 
 test("sanitizes labels and keeps muted bar alignment when context usage is unknown", () => {
   const line = stripVTControlCharacters(
-    format({ ...baseState, percent: null }, 100, plain),
+    format({ ...baseState, percent: null, tokens: null }, 120, plain),
   );
-  assert.match(line, /⣿{10} —.*myproject/u);
+  assert.match(line, /⣿{10} — · 200k.*myproject/u);
   assert.doesNotMatch(line, /\n/);
+});
+
+test("formats token counts, model names, provider names, and thinking levels cleanly", () => {
+  assert.equal(formatTokens(0), "0");
+  assert.equal(formatTokens(512), "512");
+  assert.equal(formatTokens(1000), "1k");
+  assert.equal(formatTokens(2500), "2.5k");
+  assert.equal(formatTokens(26_000), "26k");
+  assert.equal(formatTokens(999_600), "1M");
+  assert.equal(formatTokens(1_250_000), "1.3M");
+
+  assert.equal(
+    formatModelName("Claude Sonnet 4.5 (latest)"),
+    "Claude Sonnet 4.5",
+  );
+  assert.equal(
+    formatModelName("Anthropic: Claude Sonnet 4.5"),
+    "Claude Sonnet 4.5",
+  );
+  assert.equal(
+    formatModelName("eu.anthropic.claude-sonnet-4-5-20250929-v1:0"),
+    "eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
+  );
+  assert.equal(formatModelName("   "), "no model");
+
+  assert.equal(formatProviderName("openai-codex"), "OpenAI Codex");
+  assert.equal(formatProviderName("amazon-bedrock"), "Bedrock");
+  assert.equal(formatProviderName("openrouter"), "OpenRouter");
+  assert.equal(formatProviderName("my-custom_gateway"), "My Custom Gateway");
+
+  assert.equal(formatThinkingLevel("xhigh"), "x-high");
+  assert.equal(formatThinkingLevel("high"), "high");
 });
 
 test("formats sub-cent, standard, subscription, and invalid costs", () => {
   assert.match(
-    format({ ...baseState, estimatedCost: 0 }, 100, plain),
-    /~\$0\.00/,
+    format({ ...baseState, estimatedCost: 0 }, 300, styled),
+    /text:~\$0\.00/,
   );
   assert.match(
-    format({ ...baseState, estimatedCost: 0.004 }, 100, plain),
+    format({ ...baseState, estimatedCost: 0.004 }, 120, plain),
     /~\$0\.004/,
   );
   assert.match(
-    format({ ...baseState, estimatedCost: 0.0099 }, 100, plain),
+    format({ ...baseState, estimatedCost: 0.0099 }, 120, plain),
     /~\$0\.01(?!\d)/,
   );
   assert.match(
     format(
       { ...baseState, estimatedCost: 1.33, usingSubscription: true },
-      100,
-      plain,
+      300,
+      styled,
     ),
-    /~\$1\.33 \(sub\)/,
+    /text:~\$1\.33borderMuted: · muted:subscription/,
   );
   for (const cost of [Number.NaN, Number.POSITIVE_INFINITY, -1]) {
     assert.match(
       format(
         { ...baseState, estimatedCost: cost, usingSubscription: true },
-        100,
-        plain,
+        300,
+        styled,
       ),
-      /~\$—(?! \(sub\))/,
+      /muted:~\$—(?!.*subscription)/,
     );
   }
-  const over = format({ ...baseState, percent: 150 }, 100, plain);
+  const over = format({ ...baseState, percent: 150 }, 120, plain);
   assert.match(over, /150%/);
   assert.equal((over.match(/⣿/gu) ?? []).length, 10);
 });
 
-test("renders thinking level with dedicated theme token and optional multi-provider prefix", () => {
+test("renders model before humanized provider and thinking level", () => {
   const withBoth = format(
     {
       ...baseState,
-      provider: "anthropic",
-      thinking: "high",
+      model: "Anthropic: Claude Sonnet 4.5 (latest)",
+      provider: "openrouter",
+      thinking: "xhigh",
     },
     300,
     styled,
   );
   assert.match(
     withBoth,
-    /muted:\(anthropic\) accent:gpt-6-solborderMuted: • thinkingHigh:high/,
+    /accent:Claude Sonnet 4\.5 muted:\(OpenRouter\)borderMuted: · thinkingXhigh:x-high/,
   );
 
   const offThinking = format(
@@ -120,27 +170,54 @@ test("renders thinking level with dedicated theme token and optional multi-provi
       ...baseState,
       thinking: "off",
     },
-    100,
+    120,
     plain,
   );
-  assert.doesNotMatch(offThinking, /•/);
+  assert.doesNotMatch(offThinking, /GPT-6 Sol ·/);
 });
 
-test("drops provider prefix and truncates long branch or directory before dropping whole segments", () => {
+test("compacts secondary details before dropping branch or directory in an 80-col split pane", () => {
+  const rich: State = {
+    percent: 13,
+    tokens: 35_000,
+    contextWindow: 272_000,
+    estimatedCost: 1.33,
+    usingSubscription: true,
+    provider: "openai-codex",
+    thinking: "xhigh",
+    model: "GPT-5.3 Codex",
+    directory: "pi-status",
+    branch: "main",
+  };
+
+  const at80 = format(rich, 80, plain);
+  assert.ok(visibleWidth(at80) <= 80, `width 80 exceeded: ${at80}`);
+  assert.match(at80, /13%/);
+  assert.match(at80, /~\$1\.33/);
+  assert.match(at80, /GPT-5\.3 Codex · x-high/);
+  assert.match(at80, / pi-status/);
+  assert.match(at80, / main/);
+  assert.doesNotMatch(at80, /OpenAI Codex/);
+  assert.doesNotMatch(at80, /subscription/);
+});
+
+test("drops secondary tags and truncates long branch or directory before dropping whole segments", () => {
   const rich: State = {
     percent: 25,
+    tokens: 50_000,
+    contextWindow: 200_000,
     estimatedCost: 0.12,
     provider: "openrouter",
     thinking: "medium",
-    model: "claude-sonnet-4-5",
+    model: "Claude Sonnet 4.5",
     directory: "pi-status",
     branch: "feature/JIRA-1234-long-branch-description-for-status-footer",
   };
 
   const at90 = format(rich, 90, plain);
   assert.ok(visibleWidth(at90) <= 90);
-  assert.match(at90, / {2}pi-status/);
-  assert.match(at90, / {2}feature\/.*…/);
+  assert.match(at90, / pi-status/);
+  assert.match(stripVTControlCharacters(at90), / feature.*…/);
 
   const longDir: State = {
     ...baseState,
@@ -149,7 +226,7 @@ test("drops provider prefix and truncates long branch or directory before droppi
   };
   const at70 = format(longDir, 70, plain);
   assert.ok(visibleWidth(at70) <= 70);
-  assert.match(at70, / {2}very-long-.*…/);
+  assert.match(at70, / very-long-.*…/);
 });
 
 test("keeps the model visible in a narrow terminal and fits every width", () => {
@@ -160,9 +237,11 @@ test("keeps the model visible in a narrow terminal and fits every width", () => 
 
   const complex: State = {
     percent: 82,
+    tokens: 164_000,
+    contextWindow: 200_000,
     estimatedCost: 0.004,
     usingSubscription: true,
-    provider: "bedrock",
+    provider: "amazon-bedrock",
     thinking: "xhigh",
     model: "日本語-long-model",
     directory: "wide-directory",
@@ -269,6 +348,7 @@ test("tracks session switches, guards aborted usage, and skips non-TUI modes", (
       cwd: "/home/dev/project",
       model: {
         id: "test-model",
+        name: "Test Model",
         provider: "openai-codex",
         reasoning: true,
       },
@@ -332,27 +412,31 @@ test("tracks session switches, guards aborted usage, and skips non-TUI modes", (
     footerData,
   );
 
-  const initialLines = footer.render(120);
+  const initialLines = footer.render(160);
   assert.equal(initialLines.length, 2);
-  assert.match(initialLines[0] ?? "", /~\$0\.30 \(sub\)/);
-  assert.match(initialLines[0] ?? "", /\(openai-codex\) test-model • high/);
+  assert.match(initialLines[0] ?? "", /25% · 2\.5k\/10k/);
+  assert.match(initialLines[0] ?? "", /~\$0\.30 · subscription/);
+  assert.match(initialLines[0] ?? "", /Test Model \(OpenAI Codex\) · high/);
   assert.match(initialLines[1] ?? "", /active job/);
   assert.equal(traversals, 1);
 
   // Cached on ordinary terminal redraw
-  footer.render(120);
+  footer.render(160);
   assert.equal(traversals, 1);
 
   // Thinking level change requests redraw and updates rendered thinking suffix
   thinkingLevel = "low";
   handlers.get("thinking_level_select")?.();
   assert.equal(renderRequests, 1);
-  assert.match(footer.render(120)[0] ?? "", /test-model • low/);
+  assert.match(
+    footer.render(160)[0] ?? "",
+    /Test Model \(OpenAI Codex\) · low/,
+  );
 
   // Switching to a new empty session with the same leafId (null -> null) invalidates via sessionId
   leafId = null;
   entries.length = 0;
-  assert.match(footer.render(120)[0] ?? "", /~\$0\.00 \(sub\)/);
+  assert.match(footer.render(160)[0] ?? "", /~\$0\.00 · subscription/);
   assert.equal(traversals, 2);
 
   entries.push({
@@ -366,7 +450,7 @@ test("tracks session switches, guards aborted usage, and skips non-TUI modes", (
     usage: { cost: { total: 0.004 } } as never,
   });
   sessionId = "s2";
-  assert.match(footer.render(120)[0] ?? "", /~\$0\.004 \(sub\)/);
+  assert.match(footer.render(160)[0] ?? "", /~\$0\.004 · subscription/);
   assert.equal(traversals, 3);
 
   footer.dispose?.();
