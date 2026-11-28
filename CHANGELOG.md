@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/pi-contrib/pi-status/compare/v0.3.0...v0.3.1) (2026-11-28)
+
+
+### Bug Fixes
+
+* **footer:** simplify context display and restore muted colors ([f2adfa5](https://github.com/pi-contrib/pi-status/commit/f2adfa5f0e4b96dfd8c75910feb406ba2a291ae7))
+* restore accent color for estimated cost ([64cb067](https://github.com/pi-contrib/pi-status/commit/64cb067a611957a3081e3f3c03a7e127b6c1fae6))
+
 ## [0.3.0](https://github.com/pi-contrib/pi-status/compare/v0.2.0...v0.3.0) (2026-11-28)
 
 
